@@ -1,0 +1,12 @@
+---
+help: |
+  Deploy a specific role to container or VM targets.
+
+variables:
+  role_name:
+    parameter: role_name
+    help: Name of the role to deploy (e.g., pulp, postgresql, redis, etc.)
+    required: true
+  inventory:
+    help: Inventory file to use (defaults to local_containers for containers, local_vagrant for VMs)
+    action: store

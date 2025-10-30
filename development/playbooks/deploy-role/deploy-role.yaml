@@ -1,0 +1,20 @@
+---
+- name: Deploy a specific role to container targets
+  hosts:
+    - quadlet
+  become: true
+  tasks:
+    - name: Include the specified role
+      ansible.builtin.include_role:
+        name: "{{ role_name }}"
+      when: role_name is defined
+
+    - name: Display completion message
+      ansible.builtin.debug:
+        msg: "Successfully deployed role '{{ role_name }}' to {{ inventory_hostname }}"
+      when: role_name is defined
+
+    - name: Display error when no role specified
+      ansible.builtin.fail:
+        msg: "No role specified. Use role_name parameter to specify which role to deploy."
+      when: role_name is not defined

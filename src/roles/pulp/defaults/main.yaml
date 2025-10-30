@@ -23,6 +23,7 @@ pulp_database_name: pulp
 pulp_database_user: pulp
 pulp_database_host: localhost
 pulp_database_port: 5432
+pulp_database_password: changeme
 pulp_database_ssl_mode: disabled
 pulp_database_ssl_ca: None
 
