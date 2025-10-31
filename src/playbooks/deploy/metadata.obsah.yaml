@@ -7,6 +7,8 @@ variables:
     help: Initial username for the admin user.
   foreman_initial_admin_password:
     help: Initial password for the admin user.
+  enable_iop:
+    help: Enable deployment of IOP services.
 
 include:
   - _certificate_source

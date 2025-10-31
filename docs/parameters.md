@@ -50,6 +50,14 @@ There are multiple use cases from the users perspective that dictate what parame
 | `--foreman-initial-admin-username` | Initial username for the admin user | `--foreman-initial-admin-username` |
 | `--foreman-initial-admin-password` | Initial password for the admin user | `--foreman-initial-admin-password` |
 
+#### IOP
+
+##### Mapped
+
+| Parameter | Description | foreman-installer Parameters |
+| ----------| ----------- | ---------------------------- |
+| `--enable-iop` | Enable deployment of IOP services | `--enable-iop` |
+
 #### Certs
 
 ##### Mapped

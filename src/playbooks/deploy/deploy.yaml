@@ -53,4 +53,6 @@
     - httpd
     - pulp
     - foreman
+    - role: iop_core
+      when: enable_iop | bool
     - post_install
