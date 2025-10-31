@@ -63,6 +63,14 @@ Some of the stages will be made available to the user to run independently.
   8. Execute post deployment checks
   9. Post deployment message
 
+## IOP
+
+To enable IOP services during deployment:
+
+```bash
+foremanctl deploy --enable-iop
+```
+
 ## Configuration Handling
 
 When defining how a service will handle configuration there are best practices in design that should be followed.

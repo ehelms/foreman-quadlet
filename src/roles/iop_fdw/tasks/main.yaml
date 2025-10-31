@@ -1,0 +1,148 @@
+---
+- name: Ensure PostgreSQL client is available
+  ansible.builtin.package:
+    name: postgresql
+    state: present
+
+- name: Enable postgres_fdw extension on local database
+  community.postgresql.postgresql_ext:
+    name: postgres_fdw
+    db: "{{ iop_fdw_database_name }}"
+    login_user: postgres
+    login_password: "{{ postgresql_admin_password }}"
+    login_host: localhost
+
+- name: Create foreign server
+  community.postgresql.postgresql_query:
+    db: "{{ iop_fdw_database_name }}"
+    login_user: postgres
+    login_password: "{{ postgresql_admin_password }}"
+    login_host: localhost
+    query: |
+      CREATE SERVER {{ iop_fdw_foreign_server_name }} FOREIGN DATA WRAPPER postgres_fdw
+      OPTIONS (host '{{ iop_fdw_inventory_database_host }}', port '{{ iop_fdw_inventory_database_port }}', dbname '{{ iop_fdw_remote_database_name }}');
+    autocommit: true
+  register: foreign_server_result
+  failed_when: foreign_server_result.failed and 'already exists' not in foreign_server_result.msg
+  changed_when: not foreign_server_result.failed
+
+- name: Create user mapping for local database user
+  community.postgresql.postgresql_query:
+    db: "{{ iop_fdw_database_name }}"
+    login_user: postgres
+    login_password: "{{ postgresql_admin_password }}"
+    login_host: localhost
+    query: |
+      CREATE USER MAPPING FOR "{{ iop_fdw_database_user }}" SERVER {{ iop_fdw_foreign_server_name }}
+      OPTIONS (user '{{ iop_fdw_remote_database_user }}', password '{{ iop_fdw_remote_database_password }}');
+    autocommit: true
+  register: user_mapping_result
+  failed_when: user_mapping_result.failed and 'already exists' not in user_mapping_result.msg
+  changed_when: not user_mapping_result.failed
+
+- name: Create user mapping for postgres user
+  community.postgresql.postgresql_query:
+    db: "{{ iop_fdw_database_name }}"
+    login_user: postgres
+    login_password: "{{ postgresql_admin_password }}"
+    login_host: localhost
+    query: |
+      CREATE USER MAPPING FOR "postgres" SERVER {{ iop_fdw_foreign_server_name }}
+      OPTIONS (user '{{ iop_fdw_remote_database_user }}', password '{{ iop_fdw_remote_database_password }}');
+    autocommit: true
+  register: postgres_mapping_result
+  failed_when: postgres_mapping_result.failed and 'already exists' not in postgres_mapping_result.msg
+  changed_when: not postgres_mapping_result.failed
+
+- name: Grant usage on foreign server to local database user
+  community.postgresql.postgresql_query:
+    db: "{{ iop_fdw_database_name }}"
+    login_user: postgres
+    login_password: "{{ postgresql_admin_password }}"
+    login_host: localhost
+    query: |
+      GRANT USAGE ON FOREIGN SERVER {{ iop_fdw_foreign_server_name }} TO "{{ iop_fdw_database_user }}";
+    autocommit: true
+  register: grant_usage_result
+  changed_when: true
+
+- name: Create inventory schema in local database
+  community.postgresql.postgresql_schema:
+    db: "{{ iop_fdw_database_name }}"
+    name: "{{ iop_fdw_remote_table_schema }}"
+    owner: "{{ iop_fdw_database_user }}"
+    login_user: postgres
+    login_password: "{{ postgresql_admin_password }}"
+    login_host: localhost
+
+- name: Create inventory_source schema in local database
+  community.postgresql.postgresql_schema:
+    db: "{{ iop_fdw_database_name }}"
+    name: "{{ iop_fdw_local_source_schema }}"
+    owner: "{{ iop_fdw_database_user }}"
+    login_user: postgres
+    login_password: "{{ postgresql_admin_password }}"
+    login_host: localhost
+
+- name: Import foreign schema
+  community.postgresql.postgresql_query:
+    db: "{{ iop_fdw_database_name }}"
+    login_user: postgres
+    login_password: "{{ postgresql_admin_password }}"
+    login_host: localhost
+    query: |
+      IMPORT FOREIGN SCHEMA "{{ iop_fdw_remote_table_schema }}"
+      LIMIT TO ("{{ iop_fdw_remote_table_name }}")
+      FROM SERVER {{ iop_fdw_foreign_server_name }}
+      INTO "{{ iop_fdw_local_source_schema }}";
+    autocommit: true
+  register: import_schema_result
+  failed_when: import_schema_result.failed and 'already exists' not in import_schema_result.msg
+  changed_when: not import_schema_result.failed
+
+- name: Create local inventory view
+  community.postgresql.postgresql_query:
+    db: "{{ iop_fdw_database_name }}"
+    login_user: "{{ iop_fdw_database_user }}"
+    login_password: "{{ iop_fdw_database_password }}"
+    login_host: localhost
+    query: |
+      CREATE OR REPLACE VIEW "{{ iop_fdw_remote_table_schema }}"."{{ iop_fdw_remote_table_name }}" AS
+      SELECT * FROM "{{ iop_fdw_local_source_schema }}"."{{ iop_fdw_remote_table_name }}";
+    autocommit: true
+
+- name: Grant SELECT permission on foreign table to local database user
+  community.postgresql.postgresql_query:
+    db: "{{ iop_fdw_database_name }}"
+    login_user: postgres
+    login_password: "{{ postgresql_admin_password }}"
+    login_host: localhost
+    query: |
+      GRANT SELECT ON "{{ iop_fdw_local_source_schema }}"."{{ iop_fdw_remote_table_name }}" TO "{{ iop_fdw_database_user }}";
+    autocommit: true
+  register: grant_foreign_result
+  changed_when: true
+
+- name: Grant SELECT permission on remote view to inventory database user
+  community.postgresql.postgresql_query:
+    db: "{{ iop_fdw_remote_database_name }}"
+    login_user: postgres
+    login_password: "{{ postgresql_admin_password }}"
+    login_host: localhost
+    query: |
+      GRANT SELECT ON "{{ iop_fdw_remote_table_schema }}"."{{ iop_fdw_remote_table_name }}" TO "{{ iop_fdw_remote_database_user }}";
+    autocommit: true
+  register: grant_remote_result
+  changed_when: true
+
+- name: Grant SELECT on inventory view to postgres user
+  community.postgresql.postgresql_query:
+    db: "{{ iop_fdw_database_name }}"
+    login_user: postgres
+    login_password: "{{ postgresql_admin_password }}"
+    login_host: localhost
+    query: |
+      GRANT SELECT ON "{{ iop_fdw_remote_table_schema }}"."{{ iop_fdw_remote_table_name }}" TO postgres;
+    autocommit: true
+  register: grant_view_select_result
+  changed_when: true

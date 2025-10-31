@@ -1,0 +1,16 @@
+---
+iop_fdw_inventory_database_host: "localhost"
+iop_fdw_inventory_database_port: "5432"
+
+iop_fdw_database_name:
+iop_fdw_database_user:
+iop_fdw_database_password:
+
+iop_fdw_remote_database_name: "inventory_db"
+iop_fdw_remote_database_user: "inventory_admin"
+iop_fdw_remote_database_password:
+
+iop_fdw_remote_table_schema: "inventory"
+iop_fdw_remote_table_name: "hosts"
+iop_fdw_local_source_schema: "inventory_source"
+iop_fdw_foreign_server_name: "hbi_server"

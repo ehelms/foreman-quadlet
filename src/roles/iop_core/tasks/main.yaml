@@ -1,0 +1,52 @@
+---
+- name: Deploy IOP Kafka service
+  ansible.builtin.include_role:
+    name: iop_kafka
+
+- name: Deploy IOP Inventory service
+  ansible.builtin.include_role:
+    name: iop_inventory
+
+- name: Deploy IOP Ingress service
+  ansible.builtin.include_role:
+    name: iop_ingress
+
+- name: Deploy IOP Gateway service
+  ansible.builtin.include_role:
+    name: iop_gateway
+
+- name: Deploy IOP Puptoo service
+  ansible.builtin.include_role:
+    name: iop_puptoo
+
+- name: Deploy IOP Yuptoo service
+  ansible.builtin.include_role:
+    name: iop_yuptoo
+
+- name: Deploy IOP Engine service
+  ansible.builtin.include_role:
+    name: iop_engine
+
+- name: Deploy IOP Advisor service
+  ansible.builtin.include_role:
+    name: iop_advisor
+
+- name: Deploy IOP Remediations service
+  ansible.builtin.include_role:
+    name: iop_remediations
+
+- name: Deploy IOP Advisor Frontend
+  ansible.builtin.include_role:
+    name: iop_advisor_frontend
+
+- name: Deploy IOP VMAAS service
+  ansible.builtin.include_role:
+    name: iop_vmaas
+
+- name: Deploy IOP Vulnerability service
+  ansible.builtin.include_role:
+    name: iop_vulnerability
+
+- name: Deploy IOP Vulnerability Frontend
+  ansible.builtin.include_role:
+    name: iop_vulnerability_frontend

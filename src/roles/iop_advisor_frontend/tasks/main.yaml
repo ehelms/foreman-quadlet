@@ -1,0 +1,47 @@
+---
+- name: Create foreman user
+  ansible.builtin.user:
+    name: foreman
+    state: present
+    system: true
+    shell: /sbin/nologin
+    home: /var/lib/foreman
+    create_home: true
+
+- name: Pull Advisor Frontend container image
+  containers.podman.podman_image:
+    name: "{{ iop_advisor_frontend_container_image }}:{{ iop_advisor_frontend_container_tag }}"
+    state: present
+
+- name: Ensure assets directory exists
+  ansible.builtin.file:
+    path: "{{ iop_advisor_frontend_assets_path }}"
+    state: directory
+    owner: foreman
+    group: foreman
+    mode: '0755'
+
+- name: Create temporary container for asset extraction
+  containers.podman.podman_container:
+    name: iop-advisor-frontend-temp
+    image: "{{ iop_advisor_frontend_container_image }}:{{ iop_advisor_frontend_container_tag }}"
+    state: created
+
+- name: Extract advisor frontend assets from container
+  containers.podman.podman_container_copy:
+    container: iop-advisor-frontend-temp
+    src: "{{ iop_advisor_frontend_source_path }}"
+    dest: "{{ iop_advisor_frontend_assets_path }}"
+    from_container: true
+
+- name: Remove temporary container
+  containers.podman.podman_container:
+    name: iop-advisor-frontend-temp
+    state: absent
+
+- name: Set ownership of advisor frontend assets
+  ansible.builtin.file:
+    path: "{{ iop_advisor_frontend_assets_path }}"
+    owner: foreman
+    group: foreman
+    recurse: true

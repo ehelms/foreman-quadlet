@@ -1,0 +1,3 @@
+---
+iop_remediations_container_image: "quay.io/iop/remediations"
+iop_remediations_container_tag: "latest"
