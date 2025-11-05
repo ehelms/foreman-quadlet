@@ -1,0 +1,11 @@
+---
+iop_advisor_container_image: "quay.io/iop/advisor-backend"
+iop_advisor_container_tag: "latest"
+
+iop_advisor_frontend_image: "quay.io/iop/advisor-frontend"
+iop_advisor_frontend_tag: "latest"
+iop_advisor_frontend_destination: "/var/lib/foreman/public/assets/apps/advisor"
+iop_advisor_frontend_source_path: "/srv/dist"
+
+iop_advisor_database_host: "localhost"
+iop_advisor_database_port: "5432"

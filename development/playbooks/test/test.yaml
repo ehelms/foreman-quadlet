@@ -21,6 +21,7 @@
         chdir: "{{ inventory_dir }}/../"
       register: ssh_config
       changed_when: false
+      ignore_errors: true
 
     - name: Write ssh_config
       ansible.builtin.copy:

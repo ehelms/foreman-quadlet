@@ -9,6 +9,28 @@
     - "../../vars/images.yml"
     - "../../vars/database.yml"
     - "../../vars/foreman.yml"
+  pre_tasks:
+    - name: Add IOP users to postgresql_users list if IOP is enabled
+      ansible.builtin.set_fact:
+        postgresql_users: "{{ postgresql_users + iop_users }}"
+      vars:
+        iop_users:
+          - name: "{{ iop_advisor_database_user }}"
+            password: "{{ iop_advisor_database_password }}"
+          - name: "{{ iop_remediation_database_user }}"
+            password: "{{ iop_remediation_database_password }}"
+      when: enable_iop | default(false) | bool
+
+    - name: Add IOP databases to postgresql_databases list if IOP is enabled
+      ansible.builtin.set_fact:
+        postgresql_databases: "{{ postgresql_databases + iop_databases }}"
+      vars:
+        iop_databases:
+          - name: "{{ iop_advisor_database_name }}"
+            owner: "{{ iop_advisor_database_user }}"
+          - name: "{{ iop_remediation_database_name }}"
+            owner: "{{ iop_remediation_database_user }}"
+      when: enable_iop | default(false) | bool
   vars:
     certificates_hostnames:
       - "{{ ansible_fqdn }}"

@@ -185,7 +185,10 @@ def iop_services():
         'iop-core-gateway',
         'iop-core-engine',
         'iop-core-puptoo',
-        'iop-core-yuptoo'
+        'iop-core-yuptoo',
+        'iop-service-advisor-backend-api',
+        'iop-service-advisor-backend-service',
+        'iop-service-remediations-api'
     ]
 
 
@@ -206,7 +209,17 @@ def iop_secrets():
         'iop-core-kafka-init-start',
         'iop-core-kafka-server-properties',
         'iop-core-kafka-init',
-        'iop-core-engine-config-yml'
+        'iop-core-engine-config-yml',
+        'iop-service-advisor-db-username',
+        'iop-service-advisor-db-password',
+        'iop-service-advisor-db-name',
+        'iop-service-advisor-db-host',
+        'iop-service-advisor-db-port',
+        'iop-service-remediations-db-username',
+        'iop-service-remediations-db-password',
+        'iop-service-remediations-db-name',
+        'iop-service-remediations-db-host',
+        'iop-service-remediations-db-port'
     ]
 
 

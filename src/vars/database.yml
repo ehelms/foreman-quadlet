@@ -14,6 +14,14 @@ pulp_database_name: pulp
 pulp_database_user: pulp
 pulp_database_password: CHANGEME
 
+iop_advisor_database_name: advisor_db
+iop_advisor_database_user: advisor_user
+iop_advisor_database_password: CHANGEME
+
+iop_remediation_database_name: remediations_db
+iop_remediation_database_user: remediations_user
+iop_remediation_database_password: CHANGEME
+
 candlepin_database_host: "{{ database_host }}"
 candlepin_database_port: "{{ database_port }}"
 candlepin_database_ssl_mode: "{{ database_ssl_mode }}"
@@ -37,9 +45,9 @@ postgresql_databases:
   - name: "{{ pulp_database_name }}"
     owner: "{{ pulp_database_user }}"
 postgresql_users:
-  - name: "{{ candlepin_database_name }}"
+  - name: "{{ candlepin_database_user }}"
     password: "{{ candlepin_database_password }}"
-  - name: "{{ foreman_database_name }}"
+  - name: "{{ foreman_database_user }}"
     password: "{{ foreman_database_password }}"
-  - name: "{{ pulp_database_name }}"
+  - name: "{{ pulp_database_user }}"
     password: "{{ pulp_database_password }}"

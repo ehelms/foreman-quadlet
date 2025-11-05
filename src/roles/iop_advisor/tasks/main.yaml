@@ -1,0 +1,157 @@
+---
+- name: Pull Advisor container image
+  containers.podman.podman_image:
+    name: "{{ iop_advisor_container_image }}:{{ iop_advisor_container_tag }}"
+    state: present
+
+- name: Create Advisor database username secret
+  containers.podman.podman_secret:
+    state: present
+    name: iop-service-advisor-db-username
+    data: "{{ iop_advisor_database_user }}"
+  notify: restart advisor
+
+- name: Create Advisor database password secret
+  containers.podman.podman_secret:
+    state: present
+    name: iop-service-advisor-db-password
+    data: "{{ iop_advisor_database_password }}"
+  notify: restart advisor
+
+- name: Create Advisor database name secret
+  containers.podman.podman_secret:
+    state: present
+    name: iop-service-advisor-db-name
+    data: "{{ iop_advisor_database_name }}"
+  notify: restart advisor
+
+- name: Create Advisor database host secret
+  containers.podman.podman_secret:
+    state: present
+    name: iop-service-advisor-db-host
+    data: "{{ iop_advisor_database_host }}"
+  notify: restart advisor
+
+- name: Create Advisor database port secret
+  containers.podman.podman_secret:
+    state: present
+    name: iop-service-advisor-db-port
+    data: "{{ iop_advisor_database_port }}"
+  notify: restart advisor
+
+- name: Deploy Advisor Backend API container
+  containers.podman.podman_container:
+    name: iop-service-advisor-backend-api
+    image: "{{ iop_advisor_container_image }}:{{ iop_advisor_container_tag }}"
+    state: quadlet
+    network: host
+    command: sh -c "./container_init.sh && api/app.sh"
+    env:
+      DJANGO_SESSION_KEY: "UNUSED"
+      BOOTSTRAP_SERVERS: "iop-core-kafka:9092"
+      ADVISOR_ENV: "prod"
+      LOG_LEVEL: "INFO"
+      USE_DJANGO_WEBSERVER: "false"
+      CLOWDER_ENABLED: "false"
+      WEB_CONCURRENCY: "2"
+      ENABLE_AUTOSUB: "true"
+      TASKS_REWRITE_INTERNAL_URLS: "true"
+      TASKS_REWRITE_INTERNAL_URLS_FOR: "internal.localhost"
+      ENABLE_INIT_CONTAINER_MIGRATIONS: "true"
+      ENABLE_INIT_CONTAINER_IMPORT_CONTENT: "true"
+      IMAGE: "latest"
+      ALLOWED_HOSTS: "*"
+      INVENTORY_SERVER_URL: "http://iop-core-host-inventory-api:8081/api/inventory/v1"
+      ADVISOR_DB_SSL_MODE: "disable"
+    secrets:
+      - 'iop-service-advisor-db-username,type=env,target=ADVISOR_DB_USER'
+      - 'iop-service-advisor-db-password,type=env,target=ADVISOR_DB_PASSWORD'
+      - 'iop-service-advisor-db-name,type=env,target=ADVISOR_DB_NAME'
+      - 'iop-service-advisor-db-host,type=env,target=ADVISOR_DB_HOST'
+      - 'iop-service-advisor-db-port,type=env,target=ADVISOR_DB_PORT'
+    quadlet_options:
+      - |
+        [Unit]
+        Description=Advisor Backend API
+        Wants=iop-core-host-inventory-api.service
+        After=iop-core-host-inventory-api.service
+        [Service]
+        Restart=on-failure
+        [Install]
+        WantedBy=default.target
+
+- name: Deploy Advisor Backend Service container
+  containers.podman.podman_container:
+    name: iop-service-advisor-backend-service
+    image: "{{ iop_advisor_container_image }}:{{ iop_advisor_container_tag }}"
+    state: quadlet
+    network: host
+    command: pipenv run python service/service.py
+    env:
+      BOOTSTRAP_SERVERS: "iop-core-kafka:9092"
+      ADVISOR_DB_SSL_MODE: "disable"
+    secrets:
+      - 'iop-service-advisor-db-username,type=env,target=ADVISOR_DB_USER'
+      - 'iop-service-advisor-db-password,type=env,target=ADVISOR_DB_PASSWORD'
+      - 'iop-service-advisor-db-name,type=env,target=ADVISOR_DB_NAME'
+      - 'iop-service-advisor-db-host,type=env,target=ADVISOR_DB_HOST'
+      - 'iop-service-advisor-db-port,type=env,target=ADVISOR_DB_PORT'
+    quadlet_options:
+      - |
+        [Unit]
+        Description=Advisor Backend Service
+        Wants=iop-core-host-inventory-api.service
+        After=iop-core-host-inventory-api.service
+        [Service]
+        Restart=on-failure
+        [Install]
+        WantedBy=default.target
+
+- name: Run daemon reload to make Quadlet create the service files
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Start Advisor Backend API service
+  ansible.builtin.systemd:
+    name: iop-service-advisor-backend-api
+    enabled: true
+    state: started
+
+- name: Start Advisor Backend Service
+  ansible.builtin.systemd:
+    name: iop-service-advisor-backend-service
+    enabled: true
+    state: started
+
+- name: Pull Advisor Frontend container image
+  containers.podman.podman_image:
+    name: "{{ iop_advisor_frontend_image }}:{{ iop_advisor_frontend_tag }}"
+    state: present
+
+- name: Create frontend assets directory
+  ansible.builtin.file:
+    path: "{{ iop_advisor_frontend_destination | dirname }}"
+    state: directory
+    mode: '0755'
+
+- name: Create frontend destination directory
+  ansible.builtin.file:
+    path: "{{ iop_advisor_frontend_destination }}"
+    state: directory
+    mode: '0755'
+
+- name: Create temporary container to extract frontend assets
+  containers.podman.podman_container:
+    name: "iop-advisor-frontend-extractor"
+    image: "{{ iop_advisor_frontend_image }}:{{ iop_advisor_frontend_tag }}"
+    state: created
+    command: "sleep 1"
+
+- name: Copy frontend assets from container to destination
+  ansible.builtin.command:
+    cmd: "podman cp iop-advisor-frontend-extractor:{{ iop_advisor_frontend_source_path }}/. {{ iop_advisor_frontend_destination }}/"
+
+- name: Clean up temporary container
+  containers.podman.podman_container:
+    name: "iop-advisor-frontend-extractor"
+    state: absent

@@ -1,0 +1,28 @@
+---
+- name: Check if advisor backend api service exists
+  ansible.builtin.systemd:
+    name: iop-service-advisor-backend-api
+  register: advisor_api_service_status
+  failed_when: false
+  listen: restart advisor
+
+- name: Restart advisor backend api
+  ansible.builtin.systemd:
+    name: iop-service-advisor-backend-api
+    state: restarted
+  when: advisor_api_service_status.status.LoadState == "loaded"
+  listen: restart advisor
+
+- name: Check if advisor backend service exists
+  ansible.builtin.systemd:
+    name: iop-service-advisor-backend-service
+  register: advisor_service_status
+  failed_when: false
+  listen: restart advisor
+
+- name: Restart advisor backend service
+  ansible.builtin.systemd:
+    name: iop-service-advisor-backend-service
+    state: restarted
+  when: advisor_service_status.status.LoadState == "loaded"
+  listen: restart advisor
