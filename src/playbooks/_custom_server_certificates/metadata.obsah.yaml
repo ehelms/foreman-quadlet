@@ -1,0 +1,11 @@
+---
+variables:
+  certificate_server_cert:
+    help: Path to custom server certificate file (required when certificate-source=custom-server)
+    type: AbsolutePath
+  certificate_server_key:
+    help: Path to custom server private key file (required when certificate-source=custom-server)
+    type: AbsolutePath
+  certificate_server_ca_cert:
+    help: Path to custom server CA certificate file (required when certificate-source=custom-server)
+    type: AbsolutePath

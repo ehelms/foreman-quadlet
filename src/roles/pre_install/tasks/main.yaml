@@ -1,4 +1,11 @@
 ---
+- name: Validate custom server certificate parameters
+  ansible.builtin.fail:
+    msg: "When using certificate_source 'custom-server', you must provide --certificate-server-cert, --certificate-server-key, and --certificate-server-ca-cert parameters"
+  when:
+    - certificate_source == 'custom-server'
+    - certificate_server_cert is not defined or certificate_server_key is not defined or certificate_server_ca_cert is not defined
+
 - name: Deploy debug_tools
   ansible.builtin.include_role:
     name: debug_tools

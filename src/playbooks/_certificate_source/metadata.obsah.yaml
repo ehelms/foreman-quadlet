@@ -5,3 +5,4 @@ variables:
     choices:
       - default
       - installer
+      - custom-server

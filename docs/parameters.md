@@ -57,11 +57,17 @@ There are multiple use cases from the users perspective that dictate what parame
 
 | Parameter | Description | foreman-installer Parameter |
 | ----------| ----------- | --------------------------- |
+| `--certificate-source` | Where certificates are coming from: default (self-signed), installer (from foreman-installer), or custom-server (user-provided) | N/A (new parameter) |
+| `--certificate-server-cert` | Path to custom server certificate file (required when certificate-source=custom-server) | `--certs-server-cert` |
+| `--certificate-server-key` | Path to custom server private key file (required when certificate-source=custom-server) | `--certs-server-key` |
+| `--certificate-server-ca-cert` | Path to custom server CA certificate file (required when certificate-source=custom-server) | `--certs-server-ca-cert` |
 
 ##### Unmapped
 
 | foreman-installer Parameter | Description | Reason |
 | --------------------------- | ----------- | ------ |
+| `--certs-update-server` | Parameter to mark server certs for update | Not needed - certificate updates handled by replacing certificate files and redeploying |
+| `--certs-reset` | Parameter to reset all certificates to default | Not needed - certificate reset handled by switching certificate-source to 'default' |
 
 #### Undetermined
 
@@ -78,11 +84,6 @@ There are multiple use cases from the users perspective that dictate what parame
 | `--certs-cname` | | certs | cname |
 | `--certs-tar` | | certs | tar |
 | `--certs-tar-file` | | certs | tar |
-| `--certs-server-cert` | | certs | server_cert |
-| `--certs-server-key` | | certs | server_key |
-| `--certs-server-ca-cert` | | certs | server_ca_cert |
-| `--certs-update-server` | Parameter to mark server certs for update | foreman-installer | No |
-| `--certs-reset` | Parameter to reset all certificates to default | foreman-installer | No |
 | `--foreman-initial-location` | | |
 | `--foreman-initial-organization` | | |
 | `--foreman-ipa-authentication` | | |
