@@ -37,20 +37,6 @@
         name: ../../src/roles/certificates
       when: certificate_type == 'custom'
 
-    - name: Copy certificates to convenient names for custom-server usage
-      ansible.builtin.copy:
-        src: "{{ item.src }}"
-        dest: "{{ item.dest }}"
-        remote_src: true
-        mode: preserve
-      loop:
-        - src: "{{ certificates_ca_directory_certs }}/{{ certificate_cn | default(ansible_facts['fqdn']) }}.crt"
-          dest: "{{ certificates_ca_directory }}/server.crt"
-        - src: "{{ certificates_ca_directory_keys }}/{{ certificate_cn | default(ansible_facts['fqdn']) }}.key"
-          dest: "{{ certificates_ca_directory }}/server.key"
-        - src: "{{ certificates_ca_directory_certs }}/ca.crt"
-          dest: "{{ certificates_ca_directory }}/ca.crt"
-      when: certificate_type == 'custom'
 
     - name: Generate installer certificates using role
       ansible.builtin.include_role:
@@ -66,15 +52,15 @@
 
             ./foremanctl deploy \
               --certificate-source=custom-server \
-              --certificate-server-cert={{ certificates_ca_directory }}/server.crt \
-              --certificate-server-key={{ certificates_ca_directory }}/server.key \
-              --certificate-server-ca-cert={{ certificates_ca_directory }}/ca.crt \
+              --certificate-server-cert={{ certificates_ca_directory_certs }}/{{ certificate_cn | default(ansible_facts['fqdn']) }}.crt \
+              --certificate-server-key={{ certificates_ca_directory_keys }}/{{ certificate_cn | default(ansible_facts['fqdn']) }}.key \
+              --certificate-server-ca-cert={{ certificates_ca_directory_certs }}/ca.crt \
               [other-options...]
 
           Certificate files:
-            - Server certificate: {{ certificates_ca_directory }}/server.crt
-            - Server private key: {{ certificates_ca_directory }}/server.key
-            - CA certificate: {{ certificates_ca_directory }}/ca.crt
+            - Server certificate: {{ certificates_ca_directory_certs }}/{{ certificate_cn | default(ansible_facts['fqdn']) }}.crt
+            - Server private key: {{ certificates_ca_directory_keys }}/{{ certificate_cn | default(ansible_facts['fqdn']) }}.key
+            - CA certificate: {{ certificates_ca_directory_certs }}/ca.crt
 
           Certificate CN: {{ certificate_cn | default(ansible_facts['fqdn']) }}
       when: certificate_type == 'custom'

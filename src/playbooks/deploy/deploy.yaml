@@ -15,8 +15,6 @@
     - role: checks
     - role: certificates
       when: "certificate_source == 'default' or certificate_source == 'custom-server'"
-      vars:
-        certificates_hostnames: "{{ ['localhost'] if certificate_source == 'custom-server' else certificates_hostnames }}"
     - role: certificate_checks
       vars:
         certificate_checks_certificate: "{{ server_certificate }}"

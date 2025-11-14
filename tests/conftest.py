@@ -14,7 +14,7 @@ VAGRANT_SSH_CONFIG='./.vagrant/ssh-config'
 
 
 def pytest_addoption(parser):
-    parser.addoption("--certificate-source", action="store", default="default", choices=('default', 'installer'), help="Where to obtain certificates from")
+    parser.addoption("--certificate-source", action="store", default="default", choices=('default', 'installer', 'custom-server'), help="Where to obtain certificates from")
 
 
 @pytest.fixture(scope="module")
@@ -33,13 +33,26 @@ def server_fqdn(server_hostname):
 
 
 @pytest.fixture(scope="module")
-def certificates(pytestconfig, server_fqdn):
+def certificates(pytestconfig, server_fqdn, fixture_dir):
     source = pytestconfig.getoption("certificate_source")
-    env = Environment(loader=FileSystemLoader("."), autoescape=select_autoescape())
-    template = env.get_template(f"./src/vars/{source}_certificates.yml")
-    context = {'certificates_ca_directory': '/root/certificates',
-               'ansible_facts': {'fqdn': server_fqdn}}
-    return yaml.safe_load(template.render(context))
+
+    if source == 'custom-server':
+        env = Environment(loader=FileSystemLoader("."), autoescape=select_autoescape())
+        template = env.get_template(f"./src/vars/{source}_certificates.yml")
+        context = {
+            'certificates_ca_directory': '/root/certificates',
+            'ansible_facts': {'fqdn': server_fqdn},
+            'certificate_server_cert': f'/tmp/custom-certs/certs/{server_fqdn}.crt',
+            'certificate_server_key': f'/tmp/custom-certs/private/{server_fqdn}.key',
+            'certificate_server_ca_cert': '/tmp/custom-certs/certs/ca.crt'
+        }
+        return yaml.safe_load(template.render(context))
+    else:
+        env = Environment(loader=FileSystemLoader("."), autoescape=select_autoescape())
+        template = env.get_template(f"./src/vars/{source}_certificates.yml")
+        context = {'certificates_ca_directory': '/root/certificates',
+                   'ansible_facts': {'fqdn': server_fqdn}}
+        return yaml.safe_load(template.render(context))
 
 
 @pytest.fixture(scope="module")
