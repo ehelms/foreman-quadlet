@@ -68,7 +68,7 @@ jobs:
       - name: Create installer certificates
         if: contains(matrix.certificate_source, 'installer')
         run: |
-          ./forge installer-certs
+          ./forge generate-certs --certificate-type=installer
       - name: Run image pull
         run: |
           ./foremanctl pull-images

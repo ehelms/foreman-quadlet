@@ -1,0 +1,94 @@
+---
+- name: Generate certificates
+  hosts:
+    - quadlet
+  become: true
+  vars:
+    certificates_ca: true
+    certificates_ca_directory: "{{ certificate_output_dir | default('/tmp/custom-certs') }}"
+    certificates_ca_directory_keys: "{{ certificates_ca_directory }}/private"
+    certificates_ca_directory_certs: "{{ certificates_ca_directory }}/certs"
+    certificates_ca_directory_requests: "{{ certificates_ca_directory }}/requests"
+    certificates_hostnames:
+      - "{{ certificate_cn | default(ansible_facts['fqdn']) }}"
+    certificates_ca_password: "CHANGEME"
+    certificate_type: 'custom'
+  tasks:
+    - name: Create certificate output directory
+      ansible.builtin.file:
+        path: "{{ certificates_ca_directory }}"
+        state: directory
+        mode: '0755'
+      when: certificate_type == 'custom'
+
+    - name: Create certificate subdirectories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - "{{ certificates_ca_directory_keys }}"
+        - "{{ certificates_ca_directory_certs }}"
+        - "{{ certificates_ca_directory_requests }}"
+      when: certificate_type == 'custom'
+
+    - name: Generate custom certificates
+      ansible.builtin.include_role:
+        name: ../../src/roles/certificates
+      when: certificate_type == 'custom'
+
+    - name: Copy certificates to convenient names for custom-server usage
+      ansible.builtin.copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        remote_src: true
+        mode: preserve
+      loop:
+        - src: "{{ certificates_ca_directory_certs }}/{{ certificate_cn | default(ansible_facts['fqdn']) }}.crt"
+          dest: "{{ certificates_ca_directory }}/server.crt"
+        - src: "{{ certificates_ca_directory_keys }}/{{ certificate_cn | default(ansible_facts['fqdn']) }}.key"
+          dest: "{{ certificates_ca_directory }}/server.key"
+        - src: "{{ certificates_ca_directory_certs }}/ca.crt"
+          dest: "{{ certificates_ca_directory }}/ca.crt"
+      when: certificate_type == 'custom'
+
+    - name: Generate installer certificates using role
+      ansible.builtin.include_role:
+        name: ../../roles/foreman_installer_certs
+      when: certificate_type == 'installer'
+
+    - name: Display custom certificate usage instructions
+      ansible.builtin.debug:
+        msg: |
+          Custom server certificates generated in: {{ certificates_ca_directory }}
+
+          To use these certificates with foremanctl deploy:
+
+            ./foremanctl deploy \
+              --certificate-source=custom-server \
+              --certificate-server-cert={{ certificates_ca_directory }}/server.crt \
+              --certificate-server-key={{ certificates_ca_directory }}/server.key \
+              --certificate-server-ca-cert={{ certificates_ca_directory }}/ca.crt \
+              [other-options...]
+
+          Certificate files:
+            - Server certificate: {{ certificates_ca_directory }}/server.crt
+            - Server private key: {{ certificates_ca_directory }}/server.key
+            - CA certificate: {{ certificates_ca_directory }}/ca.crt
+
+          Certificate CN: {{ certificate_cn | default(ansible_facts['fqdn']) }}
+      when: certificate_type == 'custom'
+
+    - name: Display installer certificate usage instructions
+      ansible.builtin.debug:
+        msg: |
+          Installer certificates generated in: /root/ssl-build/
+
+          To use these certificates with foremanctl deploy:
+
+            ./foremanctl deploy \
+              --certificate-source=installer \
+              [other-options...]
+
+          Certificate files are in the standard installer locations under /root/ssl-build/
+      when: certificate_type == 'installer'

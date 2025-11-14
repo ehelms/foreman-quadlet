@@ -1,0 +1,16 @@
+---
+help: |
+  Generate certificates for testing and development
+
+variables:
+  certificate_type:
+    help: Type of certificates to generate (custom, installer)
+    choices:
+      - custom
+      - installer
+    default: custom
+  certificate_output_dir:
+    help: Directory where generated certificates will be placed (default /tmp/custom-certs for custom, N/A for installer)
+    default: /tmp/custom-certs
+  certificate_cn:
+    help: Common Name for the server certificate (defaults to system FQDN, only for custom type)

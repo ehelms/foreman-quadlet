@@ -120,3 +120,36 @@ Development certificates are copied to `/home/vagrant/foreman-certs/`:
 - `proxy_ca.pem` - CA certificate
 - `client_cert.pem` - Client certificate
 - `client_key.pem` - Client private key
+
+#### Generating Certificates
+
+For testing certificate functionality, you can generate certificates using the development command:
+
+```bash
+# Generate custom server certificates (default)
+./forge generate-certs
+
+# Generate custom server certificates with custom settings
+./forge generate-certs \
+  --certificate-type=custom \
+  --certificate-output-dir=/path/to/certs \
+  --certificate-cn=myserver.example.com
+
+# Generate installer certificates (for --certificate-source=installer)
+./forge generate-certs --certificate-type=installer
+```
+
+##### Custom Server Certificates
+
+When using `--certificate-type=custom`, the generated certificates will be placed in the specified directory with convenient names:
+- `server.crt` - Server certificate
+- `server.key` - Server private key
+- `ca.crt` - CA certificate
+
+##### Installer Certificates
+
+When using `--certificate-type=installer`, the certificates are generated using foreman-installer and placed in `/root/ssl-build/` for use with:
+
+```bash
+./foremanctl deploy --certificate-source=installer
+```
