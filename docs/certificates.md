@@ -18,16 +18,33 @@ foremanctl supports two certificate sources that determine how certificates are 
 - Useful for migration scenarios where certificates already exist
 - Certificate files must be present at expected foreman-installer paths
 
+### Certificate Key Algorithms
+
+foremanctl supports both RSA and Elliptic Curve (EC) cryptographic algorithms for certificate generation:
+
+**RSA (Default)**
+- Traditional and widely compatible
+- 4096-bit key size provides strong security
+- Recommended for maximum compatibility
+
+**Elliptic Curve (EC)**
+- Smaller key sizes with equivalent security (P-384 curve, 192-bit security equivalent)
+- Better performance for TLS handshakes
+- Recommended for modern deployments
+
 ### Usage
 
 #### Using Auto-Generated Certificates (Default)
 
 ```bash
-# Deploy with auto-generated certificates
+# Deploy with auto-generated RSA certificates (default)
 foremanctl deploy
 
-# Explicitly specify default certificate source
-foremanctl deploy --certificate-source=default
+# Deploy with Elliptic Curve certificates (P-384)
+foremanctl deploy --certificates-key-type=ec
+
+# Deploy with custom RSA key size
+foremanctl deploy --certificates-rsa-key-size=2048
 ```
 
 #### Using Existing Installer Certificates
@@ -56,7 +73,6 @@ After deployment, certificates are available at:
 - Only supports single hostname (no multiple DNS names)
 - Cannot provide custom certificate files during deployment
 - Fixed 20-year certificate validity period
-- Limited certificate customization options
 
 ---
 
@@ -73,7 +89,8 @@ src/roles/certificates/
 ├── tasks/
 │   ├── main.yml          # Entry point - orchestrates CA and certificate generation
 │   ├── ca.yml            # CA certificate generation
-│   └── issue.yml         # Host certificate issuance
+│   ├── issue.yml         # Host certificate issuance
+│   └── generate_key.yml  # Reusable key generation (RSA or EC)
 ├── defaults/main.yml     # Default configuration variables
 └── templates/
     ├── openssl.cnf.j2    # OpenSSL configuration template
@@ -84,11 +101,11 @@ src/roles/certificates/
 
 1. **CA Generation** (when `certificates_ca: true`):
    - Install OpenSSL and create directory structure
-   - Generate 4096-bit RSA private key
+   - Generate private key (RSA or EC based on `certificates_key_type`)
    - Create self-signed CA certificate (CN: "Foreman Self-signed CA", 20-year validity)
 
 2. **Host Certificate Issuance** (for each hostname in `certificates_hostnames`):
-   - Generate 4096-bit RSA private key
+   - Generate private key using `generate_key.yml` task (RSA or EC)
    - Create certificate signing request (CSR)
    - Sign certificate with CA (includes serverAuth/clientAuth extensions)
    - Generate both server and client certificates per hostname
@@ -131,10 +148,15 @@ The `certificate_checks` role uses `foreman-certificate-check` binary to validat
 ### Technical Specifications
 
 **Certificate Properties:**
-- Key Size: 4096-bit RSA
+- Key Algorithms:
+  - RSA: 4096-bit (default), configurable
+  - EC: P-384 curve (secp384r1)
 - Hash Algorithm: SHA256
 - Validity Period: 7300 days (20 years)
 - Extensions: serverAuth, clientAuth, nsSGC, msSGC
+- Key Usage:
+  - RSA: digitalSignature, keyEncipherment
+  - EC: digitalSignature, keyAgreement
 
 **Directory Structure:**
 ```

@@ -5,3 +5,10 @@ variables:
     choices:
       - default
       - installer
+  certificates_key_type:
+    help: Certificate key algorithm type (RSA or Elliptic Curve).
+    choices:
+      - rsa
+      - ec
+  certificates_rsa_key_size:
+    help: Key size for RSA certificates (only applies when certificates_key_type is rsa).

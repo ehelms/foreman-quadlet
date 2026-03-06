@@ -1,0 +1,18 @@
+---
+- name: 'Generate private key: {{ certificates_key_type | upper }}'
+  ansible.builtin.command: >
+    {% if certificates_key_type == 'rsa' %}
+    openssl genpkey
+      -algorithm RSA
+      -pkeyopt rsa_keygen_bits:{{ certificates_rsa_key_size }}
+      -out "{{ key_output_path }}"
+    {% elif certificates_key_type == 'ec' %}
+    openssl genpkey
+      -algorithm EC
+      -pkeyopt ec_paramgen_curve:{{ certificates_ec_curve }}
+      -out "{{ key_output_path }}"
+    {% else %}
+    echo "Unsupported key type: {{ certificates_key_type }}" && exit 1
+    {% endif %}
+  args:
+    creates: "{{ key_output_path }}"

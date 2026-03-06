@@ -201,12 +201,17 @@ function check-cert-san () {
 }
 
 function check-cert-usage-key-encipherment () {
-    printf "Checking Key Usage extension on certificate for Key Encipherment "
-    CHECK=$(openssl x509 -noout -text -in $CERT_FILE | grep -A1 'X509v3 Key Usage:' | grep 'Key Encipherment')
-    if [[ $? == "0" ]]; then
+    printf "Checking Key Usage extension on certificate "
+
+    # Check if certificate uses RSA (Key Encipherment) or EC (Key Agreement)
+    KEY_USAGE=$(openssl x509 -noout -text -in $CERT_FILE | grep -A1 'X509v3 Key Usage:')
+
+    if echo "$KEY_USAGE" | grep -q 'Key Encipherment'; then
+        success
+    elif echo "$KEY_USAGE" | grep -q 'Key Agreement'; then
         success
     else
-        error 4 "The $CERT_FILE does not allow for the 'Key Encipherment' key usage."
+        error 4 "The $CERT_FILE does not allow for 'Key Encipherment' (RSA) or 'Key Agreement' (EC) key usage."
     fi
 }
 

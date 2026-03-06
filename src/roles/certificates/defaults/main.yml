@@ -4,3 +4,8 @@ certificates_ca_directory: /root/certificates # Change this to /var/lib?
 certificates_ca_directory_keys: "{{ certificates_ca_directory }}/private"
 certificates_ca_directory_certs: "{{ certificates_ca_directory }}/certs"
 certificates_ca_directory_requests: "{{ certificates_ca_directory }}/requests"
+
+# Certificate key algorithm configuration
+certificates_key_type: rsa          # Options: rsa, ec
+certificates_rsa_key_size: 4096     # For RSA keys
+certificates_ec_curve: secp384r1    # Options: prime256v1, secp384r1, secp521r1

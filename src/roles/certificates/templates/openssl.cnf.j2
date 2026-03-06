@@ -37,7 +37,9 @@ commonName              = supplied
 emailAddress            = optional
 
 [ req ]
-default_bits         = 4096
+{% if certificates_key_type == 'rsa' %}
+default_bits         = {{ certificates_rsa_key_size }}
+{% endif %}
 default_keyfile      = privkey.pem
 prompt               = no
 basicConstraints     = CA:FALSE
@@ -55,14 +57,22 @@ extendedKeyUsage        = serverAuth, clientAuth
 [ ssl_server ]
 basicConstraints        = CA:FALSE
 nsCertType              = server
+{% if certificates_key_type == 'ec' %}
+keyUsage                = digitalSignature, keyAgreement
+{% else %}
 keyUsage                = digitalSignature, keyEncipherment
+{% endif %}
 extendedKeyUsage        = serverAuth, nsSGC, msSGC
 nsComment               = "OpenSSL Certificate for SSL Web Server"
 
 [ ssl_client ]
 basicConstraints        = CA:FALSE
 nsCertType              = client
+{% if certificates_key_type == 'ec' %}
+keyUsage                = digitalSignature, keyAgreement
+{% else %}
 keyUsage                = digitalSignature, keyEncipherment
+{% endif %}
 extendedKeyUsage        = clientAuth
 nsComment               = "OpenSSL Certificate for SSL Client"
 

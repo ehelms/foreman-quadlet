@@ -56,7 +56,12 @@
     mode: '0600'
   no_log: true
 
-- name: 'Creating CA certificate and key'
+- name: 'Generate CA private key'
+  ansible.builtin.include_tasks: generate_key.yml
+  vars:
+    key_output_path: "{{ certificates_ca_directory_keys }}/ca.key"
+
+- name: 'Creating CA certificate'
   ansible.builtin.command: >
     openssl req -new
       -x509
@@ -65,7 +70,7 @@
       -days 7300
       -config "{{ certificates_ca_directory }}/openssl.cnf"
       -subj "/CN=Foreman Self-signed CA"
-      -keyout "{{ certificates_ca_directory_keys }}/ca.key"
+      -key "{{ certificates_ca_directory_keys }}/ca.key"
       -out "{{ certificates_ca_directory_certs }}/ca.crt"
       -passout "file:{{ certificates_ca_directory_keys }}/ca.pwd"
   args:

@@ -1,11 +1,8 @@
 ---
-- name: 'Create server key'
-  ansible.builtin.command: >
-    openssl genrsa
-      -out "{{ certificates_ca_directory_keys }}/{{ certificates_hostname }}.key"
-      4096
-  args:
-    creates: "{{ certificates_ca_directory_keys }}/{{ certificates_hostname }}.key"
+- name: 'Generate server private key'
+  ansible.builtin.include_tasks: generate_key.yml
+  vars:
+    key_output_path: "{{ certificates_ca_directory_keys }}/{{ certificates_hostname }}.key"
 
 - name: 'Creating server signing request'
   ansible.builtin.command: >
@@ -32,13 +29,10 @@
   args:
     creates: "{{ certificates_ca_directory_certs }}/{{ certificates_hostname }}.crt"
 
-- name: 'Create client key'
-  ansible.builtin.command: >
-    openssl genrsa
-      -out "{{ certificates_ca_directory_keys }}/{{ certificates_hostname }}-client.key"
-      4096
-  args:
-    creates: "{{ certificates_ca_directory_keys }}/{{ certificates_hostname }}-client.key"
+- name: 'Generate client private key'
+  ansible.builtin.include_tasks: generate_key.yml
+  vars:
+    key_output_path: "{{ certificates_ca_directory_keys }}/{{ certificates_hostname }}-client.key"
 
 - name: 'Creating client signing request'
   ansible.builtin.command: >

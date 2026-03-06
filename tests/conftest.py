@@ -16,6 +16,7 @@ SSH_CONFIG='./.tmp/ssh-config'
 def pytest_addoption(parser):
     parser.addoption("--certificate-source", action="store", default="default", choices=('default', 'installer'), help="Where to obtain certificates from")
     parser.addoption("--database-mode", action="store", default="internal", choices=('internal', 'external'), help="Whether the database is internal or external")
+    parser.addoption("--certificates-key-type", action="store", default="rsa", choices=('rsa', 'ec'), help="Certificate key algorithm type (RSA or EC)")
 
 
 @pytest.fixture(scope="module")
@@ -56,6 +57,10 @@ def certificates(pytestconfig, server_fqdn):
 @pytest.fixture(scope="module")
 def database_mode(pytestconfig):
     return pytestconfig.getoption("database_mode")
+
+@pytest.fixture(scope="module")
+def certificates_key_type(pytestconfig):
+    return pytestconfig.getoption("certificates_key_type")
 
 @pytest.fixture(scope="module")
 def server(server_hostname):
