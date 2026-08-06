@@ -1,0 +1,7 @@
+---
+help: |
+  Bootstrap the host with Vagrant and libvirt for local VM development.
+
+  One-time privileged setup. Run before './forge vms start'.
+
+  Supported: Fedora, CentOS Stream, RHEL.

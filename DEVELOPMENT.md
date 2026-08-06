@@ -17,8 +17,6 @@ This guide helps you set up foremanctl development enviornment.
 - [Vagrant Libvirt provider plugin](https://github.com/vagrant-libvirt/vagrant-libvirt)
 - Virtualization enabled in BIOS
 
-Follow [instructions](https://github.com/theforeman/forklift/blob/master/docs/vagrant.md) to install Vagrant and Libvirt.
-
 ### Development environment
 
 To setup the environment, run the setup script which will create a virtualenv and populate all of the dependencies:
@@ -27,6 +25,14 @@ To setup the environment, run the setup script which will create a virtualenv an
 ./setup-environment
 source .venv/bin/activate
 ```
+
+To install Vagrant and libvirt automatically (Fedora, CentOS Stream, RHEL):
+
+```
+./forge setup-vagrant
+```
+
+Alternatively, follow [instructions](https://github.com/theforeman/forklift/blob/master/docs/vagrant.md) to install Vagrant and libvirt manually.
 
 ### Deployment
 

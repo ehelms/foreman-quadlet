@@ -1,0 +1,2 @@
+---
+setup_vagrant_user: "{{ ansible_user_id }}"

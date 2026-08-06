@@ -1,0 +1,39 @@
+---
+- name: Install libvirt and virtualization tools
+  ansible.builtin.dnf:
+    name:
+      - libvirt
+      - libvirt-devel
+      - qemu-kvm
+    state: present
+
+- name: Install vagrant and vagrant-libvirt
+  ansible.builtin.dnf:
+    name:
+      - vagrant
+      - vagrant-libvirt
+    state: present
+
+- name: Add user to libvirt group
+  ansible.builtin.user:
+    name: "{{ setup_vagrant_user }}"
+    groups: libvirt
+    append: true
+
+- name: Enable and start libvirtd
+  ansible.builtin.systemd_service:
+    name: libvirtd
+    enabled: true
+    state: started
+
+- name: Enable and start virtnetworkd
+  ansible.builtin.systemd_service:
+    name: virtnetworkd
+    enabled: true
+    state: started
+
+- name: Post-setup instructions
+  ansible.builtin.debug:
+    msg: >-
+      Vagrant and libvirt installed. Log out and back in for the libvirt
+      group membership to take effect, then run './forge vms start'.

@@ -1,0 +1,61 @@
+---
+- name: Install EPEL repository
+  ansible.builtin.dnf:
+    name: epel-release
+    state: present
+  when: ansible_distribution == 'CentOS'
+
+- name: Set COPR base URL
+  ansible.builtin.set_fact:
+    setup_vagrant_copr_base: "https://copr.fedorainfracloud.org/coprs"
+
+- name: Install pvalena/vagrant COPR repo
+  ansible.builtin.get_url:
+    url: >-
+      {{ setup_vagrant_copr_base }}/pvalena/vagrant/repo/epel-{{ ansible_distribution_major_version
+      }}/pvalena-vagrant-epel-{{ ansible_distribution_major_version }}.repo
+    dest: /etc/yum.repos.d/pvalena-vagrant.repo
+    mode: "0644"
+
+- name: Install evgeni/vagrant COPR repo
+  ansible.builtin.get_url:
+    url: >-
+      {{ setup_vagrant_copr_base }}/evgeni/vagrant/repo/epel-{{ ansible_distribution_major_version
+      }}/evgeni-vagrant-epel-{{ ansible_distribution_major_version }}.repo
+    dest: /etc/yum.repos.d/evgeni-vagrant.repo
+    mode: "0644"
+
+- name: Install the Virtualization Hypervisor package group
+  ansible.builtin.dnf:
+    name: "@Virtualization Hypervisor"
+    state: present
+
+- name: Install the Virtualization Tools package group
+  ansible.builtin.dnf:
+    name: "@Virtualization Tools"
+    state: present
+
+- name: Install vagrant and vagrant-libvirt
+  ansible.builtin.dnf:
+    name:
+      - vagrant
+      - vagrant-libvirt
+    state: present
+
+- name: Add user to libvirt group
+  ansible.builtin.user:
+    name: "{{ setup_vagrant_user }}"
+    groups: libvirt
+    append: true
+
+- name: Enable and start libvirtd
+  ansible.builtin.systemd_service:
+    name: libvirtd
+    enabled: true
+    state: started
+
+- name: Post-setup instructions
+  ansible.builtin.debug:
+    msg: >-
+      Vagrant and libvirt installed. Log out and back in for the libvirt
+      group membership to take effect, then run './forge vms start'.

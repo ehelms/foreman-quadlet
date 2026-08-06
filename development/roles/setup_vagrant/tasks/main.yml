@@ -1,0 +1,20 @@
+---
+- name: Include Fedora tasks
+  ansible.builtin.include_tasks: fedora.yml
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution == 'Fedora'
+
+- name: Include EL tasks
+  ansible.builtin.include_tasks: el.yml
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution != 'Fedora'
+
+- name: Fail on unsupported platform
+  ansible.builtin.fail:
+    msg: >-
+      Unsupported platform: {{ ansible_distribution | default(ansible_system) }}.
+      setup-vagrant supports Fedora, CentOS Stream, and RHEL.
+  when:
+    - ansible_os_family != 'RedHat'

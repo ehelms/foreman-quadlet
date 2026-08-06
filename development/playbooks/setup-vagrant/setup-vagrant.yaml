@@ -1,0 +1,7 @@
+---
+- name: Bootstrap Vagrant and libvirt for local VM development
+  hosts:
+    - localhost
+  become: true
+  roles:
+    - setup_vagrant
